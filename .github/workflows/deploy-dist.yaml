@@ -22,13 +22,16 @@ jobs:
         uses: actions/setup-node@v4
         with: 
           node-version: 20
-      # - name: print node version
-      #   run: npm -v
+      - name: cache dependencies
+        uses: actions/cache@v4
+        with: 
+          path: ~/.npm
+          key: ${{runner.os}}-node-${{hashFiles('**/package-lock.json')}}
       - name: install dependencies
         run: npm ci
       - name: run test cases
         run: npm run test
-  Deploy:
+  Build:
     needs: Test
     runs-on: ubuntu-latest
     steps:
@@ -38,9 +41,28 @@ jobs:
         uses: actions/setup-node@v4
         with: 
           node-version: 20
+      - name: cache dependencies
+        uses: actions/cache@v4
+        with: 
+          path: ~/.npm
+          key: ${{runner.os}}-node-${{hashFiles('**/package-lock.json')}}
       - name: install dependencies
         run: npm ci
       - name: Build Project
         run: npm run build
+      - name: Uplode Dist Artifect
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist
+  Deploy:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Downlode  Dist Artifect
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-files
+          path: dist
       - name: Deploy 
         run: echo "deploy successfull"
