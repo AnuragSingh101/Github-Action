@@ -1,12 +1,27 @@
 name: Deploy Dist
-on: [push, workflow_dispatch]
+on: [push,workflow_dispatch]
 jobs:
   greet:
     runs-on: ubuntu-latest
     steps:
       - name: get code
-        run: |
-          echo "Clone repo"
-          echo "${{tojson(github)}}"
-          git clone https://github.com/${{github.repository}}.git
+        uses: actions/checkout@v4
+        # run: |
+        #   echo "Clone repo"
+        #   echo "${{tojson(github)}}"
+        #   git clone https://github.com/${{github.repository}}.git
+      - name: Installing Node js 
+        uses: actions/setup-node@v4
+        with: 
+          node-version: 20
+      - name: print node version
+        run: npm -v
+      - name: install dependencies
+        run: npm ci
+      - name: run test cases
+        run: npm run test
+
+      
+
+
 
