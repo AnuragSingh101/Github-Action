@@ -1,7 +1,7 @@
 name: Deploy Dist
 on: [push,workflow_dispatch]
 jobs:
-  greet:
+  Test:
     runs-on: ubuntu-latest
     steps:
       - name: get code
@@ -14,14 +14,24 @@ jobs:
         uses: actions/setup-node@v4
         with: 
           node-version: 20
-      - name: print node version
-        run: npm -v
+      # - name: print node version
+      #   run: npm -v
       - name: install dependencies
         run: npm ci
       - name: run test cases
         run: npm run test
-
-      
-
-
-
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get code
+        uses: actions/checkout@v4
+      - name: Installing Node js 
+        uses: actions/setup-node@v4
+        with: 
+          node-version: 20
+      - name: install dependencies
+        run: npm ci
+      - name: Build Project
+        run: npm run build
+      - name: Deploy 
+        run: echo "deploy successfull"
