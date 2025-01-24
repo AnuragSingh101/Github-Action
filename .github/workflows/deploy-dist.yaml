@@ -1,74 +1,130 @@
+# Workflow name: Deploy Dist to GitHub Pages
 name: Deploy Dist to github pages
+
+# Define when this workflow should run
 on: 
+  # Trigger this workflow on pushes to specific branches
   push:
     branches:
-      - main
-      - 'add-ons'
+      - main  # Main branch
+      - 'add-ons'  # Add-ons branch
+    # Ignore changes in certain files or directories (e.g., workflow files and README.md)
     paths-ignore:
-      - '.github/workflows/*'
-      - README.md
+      - '.github/workflows/*'  # Ignore changes in workflow files
+      - README.md  # Ignore changes in README.md
+
+  # Allow manual trigger of the workflow from GitHub UI
   workflow_dispatch:
+
+# Define the jobs (tasks) this workflow will perform
 jobs:
+  
+  # Job to test the project (e.g., run automated tests)
   Test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Use a Linux-based virtual environment
     steps:
+      # Step to check out the repository code (gets the files from GitHub)
       - name: get code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Get the latest version of the code
+        
+      # Step to install Node.js (specific version 20)
       - name: Installing Node js 
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4  # Action to install Node.js
         with: 
-          node-version: 20
+          node-version: 20  # Use Node.js version 20
+        
+      # Step to cache dependencies to speed up the workflow
       - name: cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v4  # Caches the npm dependencies to avoid re-installing them each time
         with: 
-          path: ~/.npm
-          key: ${{runner.os}}-node-${{hashFiles('**/package-lock.json')}}
+          path: ~/.npm  # The location where npm dependencies are stored
+          key: ${{runner.os}}-node-${{hashFiles('**/package-lock.json')}}  # Cache key is based on the package-lock.json file
+
+      # Step to install the necessary project dependencies
       - name: install dependencies
-        run: npm ci
+        run: npm ci  # Install dependencies using npm (npm ci is used for continuous integration)
+
+      # Step to run the project's test cases
       - name: run test cases
-        run: npm run test
+        run: npm run test  # Run the tests defined in the project
+
+  # Job to build the project (e.g., prepare for deployment)
   Build:
-    needs: Test
-    runs-on: ubuntu-latest
+    needs: Test  # This job depends on the Test job being successful
+    runs-on: ubuntu-latest  # Use a Linux-based virtual environment
     steps:
+      # Step to check out the repository code (gets the files from GitHub)
       - name: get code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Get the latest version of the code
+
+      # Step to install Node.js (specific version 20)
       - name: Installing Node js 
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4  # Action to install Node.js
         with: 
-          node-version: 20
+          node-version: 20  # Use Node.js version 20
+
+      # Step to cache dependencies to speed up the workflow
       - name: cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v4  # Caches the npm dependencies to avoid re-installing them each time
         with: 
-          path: ~/.npm
-          key: ${{runner.os}}-node-${{hashFiles('**/package-lock.json')}}
+          path: ~/.npm  # The location where npm dependencies are stored
+          key: ${{runner.os}}-node-${{hashFiles('**/package-lock.json')}}  # Cache key is based on the package-lock.json file
+
+      # Step to install the necessary project dependencies
       - name: install dependencies
-        run: npm ci
+        run: npm ci  # Install dependencies using npm (npm ci is used for continuous integration)
+
+      # Step to build the project (create a production-ready version of the app)
       - name: Build Project
-        run: npm run build
-      - name: Uplode Dist Artifect
-        uses: actions/upload-pages-artifact@v3
+        run: npm run build  # Create the production build of the project
+
+      # Step to upload the build output (dist folder) to GitHub as an artifact
+      - name: Uplode Dist Artifact
+        uses: actions/upload-pages-artifact@v3  # Upload the 'dist' folder to GitHub Pages as an artifact
         with:
-          name: github-pages
-          path: dist
+          name: github-pages  # Name of the artifact
+          path: dist  # Path to the build output directory
+
+  # Job to deploy the project to GitHub Pages
   deploy:
-    # Add a dependency to the build job
-    needs: Build
-     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    needs: Build  # This job depends on the Build job being successful
+    # Set permissions for the GitHub token to deploy to Pages
     permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      pages: write      # Allow writing to the Pages service (needed for deployment)
+      id-token: write   # Allow verification of the deployment's source
 
-    # Deploy to the github-pages environment
+    # Define deployment environment (GitHub Pages environment)
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: github-pages  # Name of the environment
+      url: ${{ steps.deployment.outputs.page_url }}  # URL of the deployed site (output from deployment step)
 
-    # Specify runner + deployment step
-    runs-on: ubuntu-latest
+    # Specify the runner and steps for deployment
+    runs-on: ubuntu-latest  # Use a Linux-based virtual environment
     steps:
+      # Step to deploy the build to GitHub Pages
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
+        id: deployment  # Identifier for this step
+        uses: actions/deploy-pages@v4  # Action to deploy to GitHub Pages
         with: 
-          token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{secrets.GITHUB_TOKEN}}  # GitHub token for authentication (uses the token stored in secrets)
+
+
+# Key Explanations:
+# Workflow Triggers:
+
+# This workflow runs when there are pushes to the main or add-ons branches. It ignores changes to .github/workflows/* (workflow files) and README.md.
+# It can also be manually triggered using the workflow_dispatch option.
+# Test Job:
+
+# Checks out the latest code.
+# Installs Node.js.
+# Caches npm dependencies (to speed up the process in the future).
+# Installs project dependencies and runs tests to ensure the app works as expected.
+# Build Job:
+
+# Builds the React app by creating a production-ready build.
+# Uploads the dist folder (which contains the built version of the site) to GitHub as an artifact.
+# Deploy Job:
+
+# Deploys the dist folder to GitHub Pages.
+# Ensures that GitHub Pages is properly configured by giving the required permissions to the GitHub token.
